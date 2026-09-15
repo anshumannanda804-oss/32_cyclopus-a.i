@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyclone AI - Multi-Source GIS Tracking & AI Prediction</title>
+  
+  <!-- Google Fonts & Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header Bar -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">🌀</div>
+      <div class="logo-title">
+        <h1>CYCLONE AI</h1>
+        <p>Resilient North Indian Ocean Monitoring (INCOIS + EUMETSAT + IBTrACS + Open-Meteo)</p>
+      </div>
+    </div>
+    
+    <div class="header-controls">
+      <span class="badge-mode" id="executionModeBadge">STACK: Multi-Source Fallback</span>
+      <button class="theme-toggle-btn" id="themeToggleBtn">
+        <span id="themeIcon">☀️</span>
+        <span id="themeText">Light Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Dashboard Grid -->
+  <div class="dashboard-grid">
+
+    <!-- Left Controls & Metrics Sidebar -->
+    <aside class="sidebar">
+      
+      <!-- Query Panel -->
+      <div class="card">
+        <div class="card-title">
+          <span>Target Coordinates</span>
+          <span style="font-size: 0.75rem; color: var(--accent-cyan);">Live API</span>
+        </div>
+        <div class="input-group">
+          <label>Target Latitude / Longitude</label>
+          <div class="input-row">
+            <input type="number" step="0.1" id="inputLat" class="input-control" value="14.5" placeholder="Lat">
+            <input type="number" step="0.1" id="inputLon" class="input-control" value="86.2" placeholder="Lon">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Active Storm Selection</label>
+          <select id="selectStorm" class="input-control">
+            <option value="BOB-01">BOB-01 (Bay of Bengal active)</option>
+            <option value="TEJ">TEJ (Arabian Sea track)</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" id="btnFetchData">⚡ Run AI Data Fusion & Prediction</button>
+      </div>
+
+      <!-- Detection Risk Metrics Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>AI Detection Indicators</span>
+          <span class="val-warning" id="detectionStatusBadge">ACTIVE</span>
+        </div>
+
+        <div class="metric-row">
+          <span class="metric-label">Dvorak Intensity (T-No)</span>
+          <span class="metric-value val-highlight" id="valDvorakT">T4.5 (CI 4.5)</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Eye Structure</span>
+          <span class="metric-value val-danger" id="valEyeDetected">DETECTED (14 km)</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Rapid Intensification Risk</span>
+          <span class="metric-value val-danger" id="valRIRisk">65.0% (HIGH)</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Genesis Potential Index (GPI)</span>
+          <span class="metric-value" id="valGPI">0.13 (MODERATE)</span>
+        </div>
+      </div>
+
+      <!-- Ocean & Atmosphere Coupling Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>Ocean & Atmosphere Coupling</span>
+        </div>
+
+        <div class="metric-row">
+          <span class="metric-label">Sea Surface Temp (INCOIS)</span>
+          <span class="metric-value val-warning" id="valSST">28.5 °C</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Ocean Heat Content (OHC)</span>
+          <span class="metric-value" id="valOHC">75.0 kJ/cm²</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Mean Sea Level Pres (MSLP)</span>
+          <span class="metric-value val-highlight" id="valMSLP">988.0 hPa</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Max Sustained Wind (10m)</span>
+          <span class="metric-value val-danger" id="valWindSpeed">55.0 knots</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Vertical Wind Shear</span>
+          <span class="metric-value val-highlight" id="valShear">12.0 knots</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main View: Interactive GIS Map & Satellite Canvas -->
+    <main class="main-view-area">
+      
+      <!-- Interactive GIS Leaflet Map -->
+      <div class="map-container-wrapper">
+        <div class="map-header-controls">
+          <select id="mapLayerSwitcher" class="input-control">
+            <option value="satellite">🛰️ Esri Satellite Imagery</option>
+            
+            <option value="osm">☀️ OpenStreetMap Standard</option>
+            <option value="nasa">🌍 NASA GIBS Real-Time</option>
+          </select>
+        </div>
+        <div id="map"></div>
+      </div>
+
+      <!-- EUMETSAT Satellite Thermal IR Viewer -->
+      <div class="card" style="padding: 1rem;">
+        <div class="card-title">
+          <span>EUMETSAT Meteosat-11 & AI Workstation</span>
+          <button id="btnDownloadSnapshot" class="btn-primary" style="padding: 0.3rem 0.6rem; width: auto; font-size: 0.75rem;">📷 Export PNG</button>
+        </div>
+
+        <div class="satellite-controls">
+          <div class="channel-selector">
+            <button class="channel-btn active" data-channel="ir">IR 10.8 µm</button>
+            <button class="channel-btn" data-channel="bd">BD-Curve</button>
+            <button class="channel-btn" data-channel="wv">WV 6.2 µm</button>
+            <button class="channel-btn" data-channel="vis">VIS 0.6 µm</button>
+          </div>
+          <div class="overlay-selector">
+            <label><input type="checkbox" id="toggleEye" checked> AI Eye</label>
+            <label><input type="checkbox" id="toggleCrosshair" checked> Crosshair</label>
+            <label><input type="checkbox" id="toggleCDO" checked> CDO Core</label>
+          </div>
+        </div>
+
+        <div class="satellite-canvas-container" id="satelliteCanvasContainer">
+          <canvas id="satelliteCanvas" width="600" height="260"></canvas>
+          <div id="thermalProbe" class="thermal-probe-overlay">
+            <div>🌡️ <span id="probeTemp">-- °C</span></div>
+            <div>📏 <span id="probeHeight">-- km</span></div>
+            <div>🎨 <span id="probeClass">--</span></div>
+          </div>
+          <div class="sat-overlay-legend" id="satLegend">
+            ☁️ Standard IR10.8: White/Blue = Cold, Grey = Warm
+          </div>
+        </div>
+        
+        <div class="playback-controls">
+          <button id="btnPlayPause" class="playback-btn">▶️</button>
+          <button id="btnStepBack" class="playback-btn">⏮️</button>
+          <button id="btnStepFwd" class="playback-btn">⏭️</button>
+          <input type="range" id="timeSlider" min="0" max="5" value="5" class="time-slider">
+          <span id="timeLabel" class="time-label">LIVE</span>
+          <span style="font-size: 0.75rem; margin-left: 10px;">Speed:</span>
+          <input type="range" id="speedSlider" min="1" max="10" value="5" class="speed-slider" title="Speed">
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Leaflet JS & App Code -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

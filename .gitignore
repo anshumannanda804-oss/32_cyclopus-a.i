@@ -1,0 +1,41 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Environment variables
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+*.tmp
+
+# Large datasets
+data/
+*.h5
+*.hdf
+*.nc
+*.nc4
+*.tif
+*.tiff
+
+# ML outputs
+runs/
+outputs/
+checkpoints/
+# Node dependencies
+node_modules/
+
+# Node dependencies
+node_modules/
